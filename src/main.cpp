@@ -2,6 +2,10 @@
 #include <string>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <quickmath.hpp>
+#include <imgui.h>
+#include <backends/imgui_impl_opengl3.h>
+#include <backends/imgui_impl_glfw.h>
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
@@ -43,6 +47,17 @@ auto static const program = []() noexcept -> int
         return EXIT_FAILURE;
     }
     #pragma endregion
+    #pragma region ImGui initialization
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 460");
+    #pragma endregion
 
     int w, h;
     glfwGetWindowSize(window, &w, &h);
@@ -68,9 +83,20 @@ auto static const program = []() noexcept -> int
 
         processInput(window);
 
+        #pragma region ImGui commands
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGui::ShowDemoWindow();
+        
+        #pragma endregion
         #pragma region Render commands
         glClearColor(1.f, 1.f, 1.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         #pragma endregion
 
         glfwSwapBuffers(window);
@@ -78,6 +104,9 @@ auto static const program = []() noexcept -> int
     }
 
     #pragma region Termination
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
     glfwDestroyWindow(window);
     glfwTerminate();
     #pragma endregion
